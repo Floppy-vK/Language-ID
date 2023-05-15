@@ -3,3 +3,4 @@ dataset/inputs_test_fp16.npy
 dataset/inputs_train_fp16.npy
 dataset/targets_test_int8.npy
 dataset/targets_train_int8.npy
+85.pt
