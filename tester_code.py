@@ -1,5 +1,5 @@
 # Replace the string below:
-MODEL_PATH = "test_model_ohe.pt"
+MODEL_PATH = "ExtraLinear_b64e3l0_001.pt"
 
 import torch
 import numpy as np
