@@ -1,5 +1,5 @@
 # Replace the string below:
-MODEL_PATH = "ExtraLinear_b200e20l0.0001.pt"
+MODEL_PATH = "b200e50l0.0005.pt"
 
 
 
