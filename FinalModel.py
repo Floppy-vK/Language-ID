@@ -60,7 +60,8 @@ target_test = tensor_y_test.to(device)
 target_test_ohe = nn.functional.one_hot(target_test.long(), 6).float()
 
 # set batch size
-BATCH_SIZE = 200
+BATCH_SIZE = 200 # tried 50, 60, 64, 100, 150, 200, 300
+
 
 # create Dataset variables and DataLoader variables
 train_dataset = data_utils.TensorDataset(training, target_train_ohe) # unsqueeze so it gets shape (64, 1, 40, 201)
@@ -90,7 +91,7 @@ class MFCC_layer(nn.Module):
 # ------------------------------------------------------------------------------
 
 # initialize MFCC layer   
-MFCC_transformation = MFCC_layer()
+MFCC_transformation = MFCC_layer( )
 
 # initialize model with MFCC layer
 model = nn.Sequential(MFCC_transformation)
@@ -138,6 +139,7 @@ summary(model, input_size=(1,40_000))
 
 # ------------------------------------------------------------------------------
 
+
 # set learning rate
 LEARNING_RATE = 0.001
 
@@ -161,133 +163,128 @@ train_losses = []
 test_accuracies = []
 test_losses = []
 
-def training_loop():
-    # create training loop
-    for epoch in range(num_epochs):
 
-        # iterate over images and labels in the training set
-        for images, labels in train_loader: 
-            
-            # set model to training mode
-            model.train()
+# create training loop
+for _ in range(num_epochs):
 
-            # perform device conversion on tensors
-            images = images.to(device)
-            labels = labels.to(device)
+    # iterate over images and labels in the training set
+    for images, labels in train_loader: 
+        
+        # set model to training mode
+        model.train()
 
-            # set all optimized tensor's gradients to zero
-            optimizer.zero_grad()
+        # perform device conversion on tensors
+        images = images.to(device)
+        labels = labels.to(device)
 
-            # get predictions from the model           
-            predictions = model(images)
+        # set all optimized tensor's gradients to zero
+        optimizer.zero_grad()
 
-            # calculate loss and backpropagate
-            loss = crossentropy_loss(predictions, labels)
-            loss.backward() 
+        # get predictions from the model           
+        predictions = model(images)
 
-            # perform optimization step
-            optimizer.step()
+        # calculate loss and backpropagate
+        loss = crossentropy_loss(predictions, labels)
+        loss.backward() 
 
-            # every 10 iterations, save current loss and accuracy of model
-            if iterations % 10 == 0:
+        # perform optimization step
+        optimizer.step()
 
-                # set model to evaluation mode
-                model.eval()
+        # every 10 iterations, save current loss and accuracy of model
+        if iterations % 10 == 0:
 
-                # temporarily disable gradient calculation
-                with torch.no_grad():
+            # set model to evaluation mode
+            model.eval()
 
-                    # initialize training output and loss list
-                    outputs_train = []
-                    train_loss = []
+            # temporarily disable gradient calculation
+            with torch.no_grad():
 
-                    #iterate over all training data
-                    for images, labels in train_loader:
+                # initialize training output and loss list
+                outputs_train = []
+                train_loss = []
 
-                        # perform device conversion on tensors
-                        images = images.to(device)
-                        labels = labels.to(device)
+                #iterate over all training data
+                for images, labels in train_loader:
 
-                        # get model predictions for given inputs
-                        predictions = model(images)
-                        # append predictions to output list
-                        outputs_train.append(predictions.argmax(dim=1).long())
-                        # calculate and append loss for predictions
-                        train_loss.append(crossentropy_loss(predictions,labels))
+                    # perform device conversion on tensors
+                    images = images.to(device)
+                    labels = labels.to(device)
 
-                    # caclulate training accuracy and append to list
-                    outputs_train = torch.cat(outputs_train)
-                    train_accuracy = (outputs_train == target_train).sum().item() / N_TRAIN
-                    train_accuracy *= 100
-                    train_accuracies.append(train_accuracy)
+                    # get model predictions for given inputs
+                    predictions = model(images)
+                    # append predictions to output list
+                    outputs_train.append(predictions.argmax(dim=1).long())
+                    # calculate and append loss for predictions
+                    train_loss.append(crossentropy_loss(predictions,labels))
 
-                    # caclulate training loss and append to list
-                    train_loss = sum(train_loss) / N_TRAIN
-                    train_losses.append(train_loss)
+                # caclulate training accuracy and append to list
+                outputs_train = torch.cat(outputs_train)
+                train_accuracy = (outputs_train == target_train).sum().item() / N_TRAIN
+                train_accuracy *= 100
+                train_accuracies.append(train_accuracy)
 
-                    # initialize test output and loss list
-                    outputs_test = []
-                    test_loss = []
+                # caclulate training loss and append to list
+                train_loss = sum(train_loss) / N_TRAIN
+                train_losses.append(train_loss)
 
-                    #iterate over all test data
-                    for images, labels in test_loader:
+                # initialize test output and loss list
+                outputs_test = []
+                test_loss = []
 
-                        # perform device conversion on tensors
-                        images = images.to(device)
-                        labels = labels.to(device)
+                #iterate over all test data
+                for images, labels in test_loader:
 
-                        # get model predictions for given inputs
-                        predictions = model(images)
-                        # append predictions to output list
-                        outputs_test.append(predictions.argmax(dim=1).long())
-                        # calculate loss and append to loss list
-                        test_loss.append(crossentropy_loss(predictions,labels))
+                    # perform device conversion on tensors
+                    images = images.to(device)
+                    labels = labels.to(device)
 
-                    # caclulate test accuracy and append to list
-                    outputs_test = torch.cat(outputs_test)
-                    test_accuracy = (outputs_test == target_test).sum().item() / N_TEST
-                    test_accuracy *= 100
-                    test_accuracies.append(test_accuracy)
+                    # get model predictions for given inputs
+                    predictions = model(images)
+                    # append predictions to output list
+                    outputs_test.append(predictions.argmax(dim=1).long())
+                    # calculate loss and append to loss list
+                    test_loss.append(crossentropy_loss(predictions,labels))
 
-                    # caclulate test loss and append to list
-                    test_loss = sum(test_loss) / N_TEST
-                    test_losses.append(test_loss)
+                # caclulate test accuracy and append to list
+                outputs_test = torch.cat(outputs_test)
+                test_accuracy = (outputs_test == target_test).sum().item() / N_TEST
+                test_accuracy *= 100
+                test_accuracies.append(test_accuracy)
 
-            #increase iteration count
-            iterations += 1
+                # caclulate test loss and append to list
+                test_loss = sum(test_loss) / N_TEST
+                test_losses.append(test_loss)
+
+        #increase iteration count
+        iterations += 1
 
 # ------------------------------------------------------------------------------
 
 # save model
-torch.jit.save(torch.jit.script(model), f"b{BATCH_SIZE}e{num_epochs}l{LEARNING_RATE}.pt")
+torch.jit.save(torch.jit.script(model), f"test_model_123.pt")
+print(f"Saved model as b{BATCH_SIZE}e{num_epochs}l{LEARNING_RATE}.pt")
 
 # ------------------------------------------------------------------------------
 
-def output_PCA():
-    # perform  device conversion on data and model
-    test = test.to("cpu")
-    target_test = target_test.to("cpu")
-    model = model.to("cpu")
 
-    # get model predictions and targets
-    model_outputs = model(test)
-    targets = target_test
+# perform  device conversion on data and model
+test = test.to("cpu")
+target_test = target_test.to("cpu")
+model = model.to("cpu")
 
-    # generate outputs using trained model
-    outputs_PCA = PCA(n_components=2).fit_transform(model_outputs.detach().numpy())
+# get model predictions and targets
+model_outputs = model(test)
+targets = target_test
 
-    # initialize scatterplot
-    fig, ax = plt.subplots()
-    scatter = ax.scatter(*outputs_PCA.T, c=targets, cmap='gist_rainbow', alpha=0.8)
-    # produce a legend with the unique colors from the scatter
-    legend1 = ax.legend(*scatter.legend_elements(),
-                        loc="upper left", title="Classes")
-    # set legend labels as languages
-    for i, text in enumerate(legend1.get_texts()):
-        text.set_text(languages[i]);
+# generate outputs using trained model
+outputs_PCA = PCA(n_components=2).fit_transform(model_outputs.detach().numpy())
 
-# ------------------------------------------------------------------------------
-
-if __name__ == 'main':
-    training_loop()
-    output_PCA()
+# initialize scatterplot
+fig, ax = plt.subplots()
+scatter = ax.scatter(*outputs_PCA.T, c=targets, cmap='gist_rainbow', alpha=0.8)
+# produce a legend with the unique colors from the scatter
+legend1 = ax.legend(*scatter.legend_elements(),
+                    loc="upper left", title="Classes")
+# set legend labels as languages
+for i, text in enumerate(legend1.get_texts()):
+    text.set_text(languages[i]);
