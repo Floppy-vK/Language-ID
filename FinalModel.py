@@ -141,10 +141,10 @@ summary(model, input_size=(1,40_000))
 
 
 # set learning rate
-LEARNING_RATE = 0.001
+LEARNING_RATE = 0.001 #tried 0.0001, 0.0005
 
 # set number of epochs model should run for
-num_epochs = 50
+num_epochs = 50 #tried 3, 5, 10, 50
 
 # set optimizer, giving it the model's parameters and the learning rate
 optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE) 
